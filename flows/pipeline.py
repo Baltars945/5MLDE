@@ -97,8 +97,10 @@ def entrainement_velos(chemin_config=configuration.CHEMIN_DEFAUT):
     config = configuration.charger(chemin_config)
     execution = ouvrir_trace(config)
     etape = "ingestion"
+    nom_lot = None
     try:
         lot = etape_ingestion(config)
+        nom_lot = lot["nom"]
 
         etape = "validation"
         controle = etape_validation(lot, config)
@@ -144,7 +146,7 @@ def entrainement_velos(chemin_config=configuration.CHEMIN_DEFAUT):
                 "mae": None,
                 "decision": None,
                 "message": str(erreur)[:500],
-                "lot": None,
+                "lot": nom_lot,
             },
         )
         raise

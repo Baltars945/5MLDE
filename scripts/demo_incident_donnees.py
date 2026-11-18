@@ -16,7 +16,10 @@ def titre(texte):
 
 
 def dernier_rapport(config):
-    rapports = sorted(Path(config["validation"]["dossier_rapports"]).glob("*.json"))
+    rapports = sorted(
+        Path(config["validation"]["dossier_rapports"]).glob("*.json"),
+        key=lambda chemin: chemin.stat().st_mtime,
+    )
     return json.loads(rapports[-1].read_text(encoding="utf-8")) if rapports else None
 
 
