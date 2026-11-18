@@ -22,6 +22,7 @@ dev = [
     "httpx>=0.28",
     "locust>=2.32",
     "ruff>=0.8",
+    "psutil>=7.2.2",
 ]
 
 [tool.pytest.ini_options]
