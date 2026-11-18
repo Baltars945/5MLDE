@@ -8,7 +8,14 @@ from tests.conftest import jeu
 
 
 def lot_depuis(donnees, nom="lot_test.csv"):
-    return {"rang": 0, "nom": nom, "chemin": nom, "lignes": len(donnees), "empreinte": "test", "donnees": donnees}
+    return {
+        "rang": 0,
+        "nom": nom,
+        "chemin": nom,
+        "lignes": len(donnees),
+        "empreinte": "test",
+        "donnees": donnees,
+    }
 
 
 def test_lot_conforme_accepte(config):

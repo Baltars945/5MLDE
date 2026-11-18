@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import great_expectations as gx
@@ -97,7 +97,7 @@ def valider(lot, config):
         "lot": lot["nom"],
         "empreinte": lot["empreinte"],
         "lignes": lot["lignes"],
-        "horodatage": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "horodatage": datetime.now(UTC).isoformat(timespec="seconds"),
         "conforme": bool(resultat.success),
         "regles_evaluees": len(resultat.describe_dict()["expectations"]),
         "echecs": echecs,
