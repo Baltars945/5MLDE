@@ -54,3 +54,36 @@ def lots(config):
     jeu(40).to_csv(dossier / "lot_000.csv", index=False)
     jeu(20, debut="2011-02-10", premier_instant=41).to_csv(dossier / "lot_001.csv", index=False)
     return dossier
+
+
+@pytest.fixture
+def config_mlflow(config, tmp_path):
+    config["mlflow"]["uri"] = f"sqlite:///{(tmp_path / 'mlflow.db').as_posix()}"
+    config["mlflow"]["experience"] = "tests"
+    config["mlflow"]["modele"] = "velos-tests"
+    return config
+
+
+@pytest.fixture
+def etapes(config, tmp_path):
+    from src import entrainement, evaluation, preparation
+
+    donnees = jeu(60)
+    chemin = tmp_path / "dataset.csv"
+    donnees.to_csv(chemin, index=False)
+    prepare = preparation.preparer(donnees, config)
+    entraine = entrainement.entrainer(prepare, config)
+    return {
+        "lot": {"rang": 0, "nom": "lot_000.csv", "lignes": 60, "empreinte": "aaa"},
+        "dataset": {
+            "donnees": donnees,
+            "chemin": str(chemin),
+            "lignes": len(donnees),
+            "empreinte": "bbb",
+        },
+        "prepare": prepare,
+        "entraine": entraine,
+        "resultats": evaluation.evaluer(entraine, prepare),
+        "chemin_rapport": None,
+        "duree_entrainement": 0.4,
+    }
