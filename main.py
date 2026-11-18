@@ -1,12 +1,13 @@
 import argparse
 
 from src import config as configuration
-from src import entrainement, evaluation, ingestion, preparation
+from src import entrainement, evaluation, ingestion, preparation, validation
 
 
 def executer(chemin_config=configuration.CHEMIN_DEFAUT):
     config = configuration.charger(chemin_config)
     lot = ingestion.ingerer(config)
+    validation.valider(lot, config)
     dataset = ingestion.promouvoir(lot, config)
     prepare = preparation.preparer(dataset["donnees"], config)
     entraine = entrainement.entrainer(prepare, config)
