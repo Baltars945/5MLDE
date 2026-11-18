@@ -31,19 +31,22 @@ def publier_etat_modele():
     return etat
 
 
+def enregistrer_version_servie(etat):
+    base.enregistrer_version(
+        config,
+        {
+            "nom": etat["nom"],
+            "version": etat["version"],
+            "run_id": etat["run_id"],
+            "mae": float(etat["mae"]) if etat["mae"] else None,
+        },
+    )
+
+
 @asynccontextmanager
 async def cycle_de_vie(application):
     try:
-        etat = modele.charger(config)
-        base.enregistrer_version(
-            config,
-            {
-                "nom": etat["nom"],
-                "version": etat["version"],
-                "run_id": etat["run_id"],
-                "mae": float(etat["mae"]) if etat["mae"] else None,
-            },
-        )
+        enregistrer_version_servie(modele.charger(config))
     except Exception as erreur:
         print(f"modele indisponible au demarrage : {erreur}")
     publier_etat_modele()
@@ -202,6 +205,11 @@ def recharger_modele(requete: Request):
         raise HTTPException(status_code=503, detail="rechargement impossible") from erreur
 
     publier_etat_modele()
+    try:
+        enregistrer_version_servie(etat)
+    except base.ERREURS as panne:
+        metriques.ERREURS_BASE.inc()
+        print(f"version servie non tracee : {str(panne).strip()}")
     return {"version": etat["version"], "run_id": etat["run_id"]}
 
 
