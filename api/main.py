@@ -57,7 +57,11 @@ application = FastAPI(title="Prevision des locations de velos", version="1.0", l
 @application.middleware("http")
 async def chronometrer(requete: Request, suivant):
     requete.state.debut = time.perf_counter()
-    return await suivant(requete)
+    reponse = await suivant(requete)
+    if requete.url.path != "/metrics":
+        metriques.REQUETES.labels(requete.url.path, str(reponse.status_code)).inc()
+        metriques.DUREE.labels(requete.url.path).observe(duree_ms(requete) / 1000)
+    return reponse
 
 
 def duree_ms(requete):
@@ -75,13 +79,7 @@ def trace_de(requete, statut, erreur=None):
     }
 
 
-def compter(requete, statut):
-    metriques.REQUETES.labels(requete.url.path, str(statut)).inc()
-    metriques.DUREE.labels(requete.url.path).observe(duree_ms(requete) / 1000)
-
-
 def tracer_echec(requete, statut, erreur):
-    compter(requete, statut)
     try:
         base.tracer_requete(config, trace_de(requete, statut, erreur))
     except psycopg.Error as panne:
@@ -107,7 +105,6 @@ def enregistrer_predictions(requete, entrees, valeurs):
         tracer_echec(requete, 503, "trace indisponible")
         raise HTTPException(status_code=503, detail="trace indisponible") from panne
 
-    compter(requete, 200)
     metriques.PREDICTIONS.inc(len(valeurs))
     for valeur in valeurs:
         metriques.LOCATIONS_PREVUES.observe(valeur)
@@ -164,7 +161,6 @@ def deposer_feedback(feedback: Feedback, requete: Request):
         tracer_echec(requete, 404, f"prediction {feedback.prediction_id} inconnue")
         raise HTTPException(status_code=404, detail="prediction inconnue")
 
-    compter(requete, 200)
     metriques.FEEDBACKS.inc()
     base.tracer_requete(config, trace_de(requete, 200))
     return ReponseFeedback(feedback_id=identifiant, prediction_id=feedback.prediction_id)
@@ -206,7 +202,6 @@ def recharger_modele(requete: Request):
         raise HTTPException(status_code=503, detail="rechargement impossible") from erreur
 
     publier_etat_modele()
-    compter(requete, 200)
     return {"version": etat["version"], "run_id": etat["run_id"]}
 
 
