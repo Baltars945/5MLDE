@@ -5,8 +5,13 @@ __pycache__/
 .ruff_cache/
 
 data/
-rapports/
 mlruns/
+
+rapports/*
+!rapports/charge
+rapports/charge/*
+!rapports/charge/resultats.md
+!rapports/charge/mesures.json
 *.db
 
 .env
