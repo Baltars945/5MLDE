@@ -9,9 +9,10 @@ def lister(config):
         servie = registre.version_servie(config)["version"]
     except Exception:
         servie = None
-    print(f"versions de {config['mlflow']['modele']} (alias {config['mlflow']['alias']} : {servie or 'aucun'})")
+    alias = config["mlflow"]["alias"]
+    print(f"versions de {config['mlflow']['modele']} (alias {alias} : {servie or 'aucun'})")
     for version in registre.versions(config, limite=20):
-        marque = f" <= {config['mlflow']['alias']}" if version.version == servie else ""
+        marque = f" <= {alias}" if version.version == servie else ""
         print(
             f"version {version.version} mae {version.tags.get('mae', '?')} "
             f"lot {version.tags.get('lot', '?')} qualifie {version.tags.get('qualifie', '?')}{marque}"
