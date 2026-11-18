@@ -20,7 +20,8 @@ def decouper(config):
     for debut in range(0, len(suite), taille_lot):
         lots.append(suite.iloc[debut : debut + taille_lot])
     if len(lots) > 1 and len(lots[-1]) < taille_lot:
-        lots[-2] = pd.concat([lots[-2], lots.pop()])
+        dernier = lots.pop()
+        lots[-1] = pd.concat([lots[-1], dernier])
 
     chemins = []
     for index, lot in enumerate(lots):
