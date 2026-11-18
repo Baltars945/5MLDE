@@ -10,6 +10,7 @@ et ce qu'il faut observer.
 docker compose up -d --wait
 uv run python -m scripts.telecharger_donnees
 uv run python -m scripts.decouper_lots
+uv run python -m scripts.reinitialiser_etat          # repart du premier lot
 uv run python -m scripts.rejouer --lots 8          # amene un premier modele champion
 uv run python -m scripts.lancer_api --hote 0.0.0.0 # dans un terminal dedie
 ```

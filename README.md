@@ -106,6 +106,12 @@ uv run python -m scripts.decouper_lots
 
 Le resultat attendu est `data/brut/day.csv` (731 lignes), puis 13 lots dans `data/lots/`.
 
+Pour repartir du premier lot, sans toucher a l'historique MLflow :
+
+```sh
+uv run python -m scripts.reinitialiser_etat
+```
+
 ## 5. Entrainer
 
 Execution directe, un lot par appel :
@@ -199,6 +205,10 @@ Le schema `service` est cree dans PostgreSQL par `base/init.sql`.
 | `executions_pipeline` | lot, statut, etape en echec, run MLflow, MAE, decision |
 
 Deux roles existent. `velos_api` ecrit. `velos_lecture` lit seulement, et Grafana l'utilise.
+
+L'API passe par une reserve de connexions (`base.connexions_max`, 8 par defaut). Elle a ete ajoutee
+apres la premiere campagne de charge. L'ouverture d'une connexion par requete provoquait des erreurs
+a 25 utilisateurs et 4 workers.
 
 ## 9. Supervision
 
