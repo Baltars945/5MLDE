@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
-import psycopg
 from prefect import flow, task
 from prefect.cache_policies import INPUTS, TASK_SOURCE
 
@@ -36,7 +35,7 @@ def alerter(message):
 def ouvrir_trace(config):
     try:
         return base.ouvrir_execution(config, None)
-    except psycopg.Error as erreur:
+    except base.ERREURS as erreur:
         alerter(f"trace d'execution indisponible : {str(erreur).strip()}")
         return None
 
@@ -46,7 +45,7 @@ def fermer_trace(config, execution, details):
         return
     try:
         base.fermer_execution(config, execution, details)
-    except psycopg.Error as erreur:
+    except base.ERREURS as erreur:
         alerter(f"trace d'execution non fermee : {str(erreur).strip()}")
 
 

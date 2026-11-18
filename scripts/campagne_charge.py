@@ -127,8 +127,10 @@ def jouer_palier(utilisateurs, duree, port, prefixe):
         "--csv",
         prefixe,
         "--only-summary",
+        "--exit-code-on-error",
+        "0",
     ]
-    subprocess.run(commande, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(commande, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return lire_stats(prefixe)
 
 

@@ -2,7 +2,6 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 
-import psycopg
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -49,6 +48,7 @@ async def cycle_de_vie(application):
         print(f"modele indisponible au demarrage : {erreur}")
     publier_etat_modele()
     yield
+    base.fermer_pool()
 
 
 application = FastAPI(title="Prevision des locations de velos", version="1.0", lifespan=cycle_de_vie)
@@ -82,7 +82,7 @@ def trace_de(requete, statut, erreur=None):
 def tracer_echec(requete, statut, erreur):
     try:
         base.tracer_requete(config, trace_de(requete, statut, erreur))
-    except psycopg.Error as panne:
+    except base.ERREURS as panne:
         metriques.ERREURS_BASE.inc()
         print(f"trace non ecrite : {str(panne).strip()}")
 
@@ -99,7 +99,7 @@ def enregistrer_predictions(requete, entrees, valeurs):
     couples = list(zip(entrees, valeurs, strict=True))
     try:
         identifiants = base.tracer_requete(config, trace, couples)
-    except psycopg.Error as panne:
+    except base.ERREURS as panne:
         metriques.ERREURS_BASE.inc()
         print(f"prediction non tracee : {str(panne).strip()}")
         tracer_echec(requete, 503, "trace indisponible")
@@ -152,7 +152,7 @@ def deposer_feedback(feedback: Feedback, requete: Request):
         identifiant = base.enregistrer_feedback(
             config, feedback.prediction_id, feedback.valeur_reelle, feedback.commentaire
         )
-    except psycopg.Error as panne:
+    except base.ERREURS as panne:
         metriques.ERREURS_BASE.inc()
         tracer_echec(requete, 503, f"feedback non ecrit : {str(panne).strip()[:200]}")
         raise HTTPException(status_code=503, detail="base indisponible") from panne
