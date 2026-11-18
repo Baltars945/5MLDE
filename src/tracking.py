@@ -1,11 +1,16 @@
+import os
 import subprocess
 import time
 
 import mlflow
 from mlflow.models import infer_signature
 
+DELAIS = {"MLFLOW_HTTP_REQUEST_TIMEOUT": "10", "MLFLOW_HTTP_REQUEST_MAX_RETRIES": "2"}
+
 
 def connecter(config):
+    for cle, valeur in DELAIS.items():
+        os.environ.setdefault(cle, valeur)
     mlflow.set_tracking_uri(config["mlflow"]["uri"])
     mlflow.set_experiment(config["mlflow"]["experience"])
 
