@@ -76,6 +76,7 @@ def journaliser(etapes, config):
             name="modele",
             signature=signature,
             input_example=prepare["x_apprentissage"].head(3),
+            serialization_format="cloudpickle",
         )
         mlflow.log_metric("duree_journalisation_s", time.perf_counter() - debut)
         print(f"run mlflow {run.info.run_id}")
