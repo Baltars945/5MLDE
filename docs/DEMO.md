@@ -81,9 +81,11 @@ Attendu :
 - `/health/live` reste a 200. Le processus repond.
 - `/health/ready` passe a 503 avec `"base": false`.
 - `/predict` repond 503 `trace indisponible`. L'API ne renvoie aucune prediction sans trace.
+- `/feedback` repond 503 `base indisponible`.
 - Le compteur `velos_erreurs_base_total` augmente. Le dashboard service le montre.
 - `/health/ready` repasse a 200 apres `docker compose start postgres`. L'API n'a pas besoin de
-  redemarrer.
+  redemarrer. Le retour prend quelques dizaines de secondes. La reserve de connexions reessaie avec
+  un delai croissant.
 
 ### 3.2 MLflow arrete
 
@@ -97,12 +99,16 @@ docker compose start mlflow
 
 Attendu :
 
-- `POST /modele/recharger` repond 503. Le registre est injoignable.
+- `POST /modele/recharger` repond 503 `rechargement impossible` en 4 a 5 secondes.
+  `MLFLOW_HTTP_REQUEST_TIMEOUT` et `MLFLOW_HTTP_REQUEST_MAX_RETRIES` bornent les appels MLflow.
 - Les predictions continuent. Le modele deja charge reste en memoire. La version servie ne change
   pas.
-- Le pipeline echoue a l'etape `tracking` apres deux tentatives. Une alerte est ecrite.
-  `service.executions_pipeline` enregistre `etape_en_echec = tracking`.
-- Aucun modele non trace n'est promu.
+- Le pipeline echoue a l'etape `tracking` apres deux tentatives, en moins d'une minute. Une alerte
+  est ecrite dans `rapports/alertes.log`. `service.executions_pipeline` enregistre
+  `etape_en_echec = tracking`.
+- Aucun modele non trace n'est promu. Le lot est deja entre dans le dataset courant. La reprise
+  consiste a relancer le pipeline une fois MLflow revenu. Le lot suivant reentraine sur les donnees
+  deja ingerees.
 
 ## 4. Retour arriere sur la version servie
 
