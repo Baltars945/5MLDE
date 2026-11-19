@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+data/
+rapports/
+mlruns/
+*.db
+
+.env
+
+ENONCE.md
+PLAN.md
