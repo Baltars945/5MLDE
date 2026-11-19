@@ -57,8 +57,7 @@ def demo(api, chemin_config):
         print(
             "derniere execution",
             lien.execute(
-                "select lot, statut, etape_en_echec from service.executions_pipeline"
-                " order by id desc limit 1"
+                "select lot, statut, etape_en_echec from service.executions_pipeline order by id desc limit 1"
             ).fetchone(),
         )
     version_apres = requests.get(f"{api}/modele", timeout=10).json()["version"]
