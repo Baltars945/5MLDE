@@ -69,9 +69,7 @@ def tracer_requete(config, trace, predictions=()):
 
 def enregistrer_feedback(config, prediction_id, valeur_reelle, commentaire):
     with connexion(config) as lien:
-        existe = lien.execute(
-            "select id from service.predictions where id = %s", (prediction_id,)
-        ).fetchone()
+        existe = lien.execute("select id from service.predictions where id = %s", (prediction_id,)).fetchone()
         if not existe:
             return None
         ligne = lien.execute(

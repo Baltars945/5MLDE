@@ -21,12 +21,8 @@ DUREE = Histogram(
 PREDICTIONS = Counter("velos_predictions_total", "predictions produites")
 FEEDBACKS = Counter("velos_feedbacks_total", "feedbacks recus")
 ERREURS_BASE = Counter("velos_erreurs_base_total", "echecs d'ecriture des traces")
-MODELE_CHARGE = Gauge(
-    "velos_modele_charge", "1 si un modele est charge", multiprocess_mode="livemax"
-)
-MODELE_VERSION = Gauge(
-    "velos_modele_version", "version du modele servi", multiprocess_mode="livemax"
-)
+MODELE_CHARGE = Gauge("velos_modele_charge", "1 si un modele est charge", multiprocess_mode="livemax")
+MODELE_VERSION = Gauge("velos_modele_version", "version du modele servi", multiprocess_mode="livemax")
 LOCATIONS_PREVUES = Histogram(
     "velos_locations_prevues",
     "distribution des predictions",

@@ -52,9 +52,7 @@ class LotNonConforme(Exception):
 def construire_suite(config):
     validation = config["validation"]
     suite = gx.ExpectationSuite(name=NOM_SUITE)
-    suite.add_expectation(
-        regles.ExpectTableRowCountToBeBetween(min_value=validation["lignes_minimum"])
-    )
+    suite.add_expectation(regles.ExpectTableRowCountToBeBetween(min_value=validation["lignes_minimum"]))
     suite.add_expectation(regles.ExpectTableColumnsToMatchSet(column_set=COLONNES_ATTENDUES))
     suite.add_expectation(regles.ExpectColumnValuesToBeUnique(column="dteday"))
     for colonne, (minimum, maximum) in BORNES.items():
@@ -66,9 +64,7 @@ def construire_suite(config):
         suite.add_expectation(
             regles.ExpectColumnValuesToBeBetween(column=colonne, min_value=minimum, max_value=maximum)
         )
-    suite.add_expectation(
-        regles.ExpectColumnPairValuesAToBeGreaterThanB(column_A="cnt", column_B="casual")
-    )
+    suite.add_expectation(regles.ExpectColumnPairValuesAToBeGreaterThanB(column_A="cnt", column_B="casual"))
     return suite
 
 

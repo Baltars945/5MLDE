@@ -19,3 +19,6 @@ rapports/charge/*
 ENONCE.md
 PLAN.md
 RAPPORT.md
+
+.coverage
+coverage.xml
