@@ -1,0 +1,59 @@
+{
+  "donnees": {
+    "source": "data/brut/day.csv",
+    "dossier_lots": "data/lots",
+    "taille_historique": 365,
+    "taille_lot": 30,
+    "curseur": "data/etat/curseur.json",
+    "dataset_courant": "data/courant/dataset.csv"
+  },
+  "validation": {
+    "lignes_minimum": 25,
+    "taux_manquants_maximum": 0.02,
+    "dossier_rapports": "rapports/validation"
+  },
+  "preparation": {
+    "cible": "cnt",
+    "colonnes": [
+      "season",
+      "yr",
+      "mnth",
+      "holiday",
+      "weekday",
+      "workingday",
+      "weathersit",
+      "temp",
+      "atemp",
+      "hum",
+      "windspeed"
+    ],
+    "part_test": 0.2
+  },
+  "modele": {
+    "type": "random_forest",
+    "n_estimators": 150,
+    "max_depth": 12,
+    "graine": 42
+  },
+  "qualification": {
+    "mae_maximum": 1200.0,
+    "gain_minimum_baseline": 0.3
+  },
+  "mlflow": {
+    "uri": "http://127.0.0.1:5001",
+    "experience": "velos",
+    "modele": "velos-locations",
+    "alias": "champion"
+  },
+  "base": {
+    "hote": "127.0.0.1",
+    "port": 5433,
+    "nom": "velos",
+    "utilisateur": "velos_api",
+    "connexions_max": 8
+  },
+  "api": {
+    "port": 8000,
+    "taille_lot_maximum": 200
+  }
+}
