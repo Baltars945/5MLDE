@@ -3,11 +3,12 @@ import os
 from pathlib import Path
 
 CHEMIN_DEFAUT = "config.json"
+MOT_DE_PASSE_LOCAL = "velos-local-api"
 
 
 def charger(chemin=CHEMIN_DEFAUT):
     config = json.loads(Path(chemin).read_text(encoding="utf-8"))
-    config["base"]["mot_de_passe"] = os.environ.get("VELOS_DB_PASSWORD", "")
+    config["base"]["mot_de_passe"] = os.environ.get("VELOS_DB_PASSWORD", MOT_DE_PASSE_LOCAL)
     config["mlflow"]["uri"] = os.environ.get("MLFLOW_TRACKING_URI", config["mlflow"]["uri"])
     return config
 
