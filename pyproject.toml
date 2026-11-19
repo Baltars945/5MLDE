@@ -7,13 +7,14 @@ dependencies = [
     "pandas>=2.2",
     "scikit-learn>=1.5",
     "mlflow>=3.16",
-    "prefect>=3.8",
+    "prefect>=3.9,<4",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.34",
     "psycopg[binary]>=3.2",
     "prometheus-client>=0.21",
     "requests>=2.32",
     "great-expectations==1.23.2",
+    "psycopg-pool>=3.3.3",
 ]
 
 [dependency-groups]

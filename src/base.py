@@ -2,13 +2,36 @@ import json
 from contextlib import contextmanager
 
 import psycopg
+from psycopg_pool import ConnectionPool, PoolTimeout
 
 from src import config as configuration
 
+ERREURS = (psycopg.Error, PoolTimeout)
+RESERVE = {}
+
+
+def pool(config):
+    if "pool" not in RESERVE:
+        RESERVE["pool"] = ConnectionPool(
+            configuration.dsn(config),
+            min_size=1,
+            max_size=config["base"]["connexions_max"],
+            timeout=5,
+            max_idle=60,
+        )
+        print(f"reserve de connexions ouverte ({config['base']['connexions_max']} maximum)")
+    return RESERVE["pool"]
+
+
+def fermer_pool():
+    reserve = RESERVE.pop("pool", None)
+    if reserve is not None:
+        reserve.close()
+
 
 @contextmanager
-def connexion(config, delai=3):
-    with psycopg.connect(configuration.dsn(config), connect_timeout=delai) as lien:
+def connexion(config, delai=5):
+    with pool(config).connection(timeout=delai) as lien:
         yield lien
 
 
@@ -17,7 +40,7 @@ def joignable(config):
         with connexion(config) as lien:
             lien.execute("select 1")
         return True
-    except psycopg.Error as erreur:
+    except ERREURS as erreur:
         print(f"base injoignable : {str(erreur).strip()}")
         return False
 

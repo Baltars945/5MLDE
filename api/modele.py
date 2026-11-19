@@ -1,11 +1,16 @@
+import os
+
 import mlflow
 import pandas as pd
 from mlflow import MlflowClient
 
 ETAT = {"modele": None, "version": None, "run_id": None, "nom": None, "mae": None}
+DELAIS = {"MLFLOW_HTTP_REQUEST_TIMEOUT": "5", "MLFLOW_HTTP_REQUEST_MAX_RETRIES": "1"}
 
 
 def charger(config):
+    for cle, valeur in DELAIS.items():
+        os.environ.setdefault(cle, valeur)
     mlflow.set_tracking_uri(config["mlflow"]["uri"])
     nom = config["mlflow"]["modele"]
     alias = config["mlflow"]["alias"]

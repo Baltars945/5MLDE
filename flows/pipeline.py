@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
-import psycopg
 from prefect import flow, task
 from prefect.cache_policies import INPUTS, TASK_SOURCE
 
@@ -36,7 +35,7 @@ def alerter(message):
 def ouvrir_trace(config):
     try:
         return base.ouvrir_execution(config, None)
-    except psycopg.Error as erreur:
+    except base.ERREURS as erreur:
         alerter(f"trace d'execution indisponible : {str(erreur).strip()}")
         return None
 
@@ -46,7 +45,7 @@ def fermer_trace(config, execution, details):
         return
     try:
         base.fermer_execution(config, execution, details)
-    except psycopg.Error as erreur:
+    except base.ERREURS as erreur:
         alerter(f"trace d'execution non fermee : {str(erreur).strip()}")
 
 
@@ -98,8 +97,10 @@ def entrainement_velos(chemin_config=configuration.CHEMIN_DEFAUT):
     config = configuration.charger(chemin_config)
     execution = ouvrir_trace(config)
     etape = "ingestion"
+    nom_lot = None
     try:
         lot = etape_ingestion(config)
+        nom_lot = lot["nom"]
 
         etape = "validation"
         controle = etape_validation(lot, config)
@@ -145,7 +146,7 @@ def entrainement_velos(chemin_config=configuration.CHEMIN_DEFAUT):
                 "mae": None,
                 "decision": None,
                 "message": str(erreur)[:500],
-                "lot": None,
+                "lot": nom_lot,
             },
         )
         raise

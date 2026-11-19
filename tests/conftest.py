@@ -16,7 +16,7 @@ def jeu(lignes=80, debut="2011-01-01", premier_instant=1):
             "mnth": dates.month,
             "holiday": 0,
             "weekday": dates.day_of_week,
-            "workingday": [i % 7 not in (5, 6) and 1 or 0 for i in range(lignes)],
+            "workingday": [0 if i % 7 in (5, 6) else 1 for i in range(lignes)],
             "weathersit": [1 + i % 3 for i in range(lignes)],
             "temp": [0.2 + (i % 10) / 20 for i in range(lignes)],
             "atemp": [0.25 + (i % 10) / 20 for i in range(lignes)],

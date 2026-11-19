@@ -2,7 +2,6 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 
-import psycopg
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -32,23 +31,27 @@ def publier_etat_modele():
     return etat
 
 
+def enregistrer_version_servie(etat):
+    base.enregistrer_version(
+        config,
+        {
+            "nom": etat["nom"],
+            "version": etat["version"],
+            "run_id": etat["run_id"],
+            "mae": float(etat["mae"]) if etat["mae"] else None,
+        },
+    )
+
+
 @asynccontextmanager
 async def cycle_de_vie(application):
     try:
-        etat = modele.charger(config)
-        base.enregistrer_version(
-            config,
-            {
-                "nom": etat["nom"],
-                "version": etat["version"],
-                "run_id": etat["run_id"],
-                "mae": float(etat["mae"]) if etat["mae"] else None,
-            },
-        )
+        enregistrer_version_servie(modele.charger(config))
     except Exception as erreur:
         print(f"modele indisponible au demarrage : {erreur}")
     publier_etat_modele()
     yield
+    base.fermer_pool()
 
 
 application = FastAPI(title="Prevision des locations de velos", version="1.0", lifespan=cycle_de_vie)
@@ -57,7 +60,11 @@ application = FastAPI(title="Prevision des locations de velos", version="1.0", l
 @application.middleware("http")
 async def chronometrer(requete: Request, suivant):
     requete.state.debut = time.perf_counter()
-    return await suivant(requete)
+    reponse = await suivant(requete)
+    if requete.url.path != "/metrics":
+        metriques.REQUETES.labels(requete.url.path, str(reponse.status_code)).inc()
+        metriques.DUREE.labels(requete.url.path).observe(duree_ms(requete) / 1000)
+    return reponse
 
 
 def duree_ms(requete):
@@ -75,16 +82,10 @@ def trace_de(requete, statut, erreur=None):
     }
 
 
-def compter(requete, statut):
-    metriques.REQUETES.labels(requete.url.path, str(statut)).inc()
-    metriques.DUREE.labels(requete.url.path).observe(duree_ms(requete) / 1000)
-
-
 def tracer_echec(requete, statut, erreur):
-    compter(requete, statut)
     try:
         base.tracer_requete(config, trace_de(requete, statut, erreur))
-    except psycopg.Error as panne:
+    except base.ERREURS as panne:
         metriques.ERREURS_BASE.inc()
         print(f"trace non ecrite : {str(panne).strip()}")
 
@@ -101,13 +102,12 @@ def enregistrer_predictions(requete, entrees, valeurs):
     couples = list(zip(entrees, valeurs, strict=True))
     try:
         identifiants = base.tracer_requete(config, trace, couples)
-    except psycopg.Error as panne:
+    except base.ERREURS as panne:
         metriques.ERREURS_BASE.inc()
         print(f"prediction non tracee : {str(panne).strip()}")
         tracer_echec(requete, 503, "trace indisponible")
         raise HTTPException(status_code=503, detail="trace indisponible") from panne
 
-    compter(requete, 200)
     metriques.PREDICTIONS.inc(len(valeurs))
     for valeur in valeurs:
         metriques.LOCATIONS_PREVUES.observe(valeur)
@@ -155,7 +155,7 @@ def deposer_feedback(feedback: Feedback, requete: Request):
         identifiant = base.enregistrer_feedback(
             config, feedback.prediction_id, feedback.valeur_reelle, feedback.commentaire
         )
-    except psycopg.Error as panne:
+    except base.ERREURS as panne:
         metriques.ERREURS_BASE.inc()
         tracer_echec(requete, 503, f"feedback non ecrit : {str(panne).strip()[:200]}")
         raise HTTPException(status_code=503, detail="base indisponible") from panne
@@ -164,7 +164,6 @@ def deposer_feedback(feedback: Feedback, requete: Request):
         tracer_echec(requete, 404, f"prediction {feedback.prediction_id} inconnue")
         raise HTTPException(status_code=404, detail="prediction inconnue")
 
-    compter(requete, 200)
     metriques.FEEDBACKS.inc()
     base.tracer_requete(config, trace_de(requete, 200))
     return ReponseFeedback(feedback_id=identifiant, prediction_id=feedback.prediction_id)
@@ -206,7 +205,11 @@ def recharger_modele(requete: Request):
         raise HTTPException(status_code=503, detail="rechargement impossible") from erreur
 
     publier_etat_modele()
-    compter(requete, 200)
+    try:
+        enregistrer_version_servie(etat)
+    except base.ERREURS as panne:
+        metriques.ERREURS_BASE.inc()
+        print(f"version servie non tracee : {str(panne).strip()}")
     return {"version": etat["version"], "run_id": etat["run_id"]}
 
 
