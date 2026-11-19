@@ -250,12 +250,28 @@ uv run python -m scripts.demo_incident_donnees
 ## 12. Tests et lint
 
 ```sh
-uv run pytest
 uv run ruff check .
+uv run ruff format --check .
+uv run pytest --cov=src --cov=api --cov=flows --cov-fail-under=75
 ```
 
 Les tests n'ont besoin d'aucun service. Un fichier SQLite temporaire remplace MLflow. Une fausse
 base en memoire remplace PostgreSQL. Un modele factice remplace le vrai modele.
+
+### Integration continue
+
+Le workflow `.github/workflows/ci.yml` se lance a chaque push sur `main` et `develop` et a chaque pull
+request. Il enchaine des workflows reutilisables :
+
+| Job | Fichier | Verification |
+|---|---|---|
+| lint | `lint.yml` | `ruff check` et `ruff format --check` |
+| tests | `tests.yml` | `pytest` avec une couverture minimale de 75 %, rapport `coverage.xml` en artefact |
+| security | `security.yml` | `pip-audit` sur les dependances verrouillees de `uv.lock` |
+| compose | `compose.yml` | validation de `compose.yml`, demarrage de la stack, sante de MLflow, Prefect, Prometheus et Grafana |
+
+Les trois premiers jobs tournent en parallele. Le job `compose` ne demarre que s'ils reussissent. Un
+nouveau push sur la meme branche annule l'execution en cours.
 
 ## 13. Limites connues
 
